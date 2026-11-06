@@ -3,104 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Catálogo Mayorista</title>
-
-  <!-- Tailwind CSS CDN -->
+  <title>Catálogo Mayorista Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- PapaParse para leer Google Sheets CSV de forma ultrarrápida -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
-<body class="bg-gray-100 text-gray-800 antialiased font-sans pb-20">
+<body class="bg-gray-50 text-gray-800 font-sans pb-20">
 
-  <!-- CONFIGURACIÓN DE TU TIENDA -->
   <script>
     const CONFIG = {
-      // Reemplazá esto por el ID de tu Google Sheet
-      SHEET_ID: '1GicHRAd8cNun3jyqMmV1i3LqWmXOnQjHcbj-_i-mIv4', 
-      // Reemplazá por tu número de WhatsApp con prefijo de país (ej: 5491112345678)
-      WHATSAPP_NUMBER: '5491171744930',
-      // Tu Public Key de Mercado Pago (opcional para cobro directo)
-      MP_PUBLIC_KEY: 'TU_PUBLIC_KEY_MERCADOPAGO'
+      SHEET_ID: '1GiCHRAd8CNun3jyQmMV1i3LqWmXOnQjHcbj-_i-mlv4', 
+      WHATSAPP_NUMBER: '5491112345678', // Reemplazá con tu número
+      MERCADO_PAGO_LINK: 'https://link.mercadopago.com.ar/tuusuario' // Tu alias o link de pago general opcional
     };
   </script>
 
-  <!-- HEADER / NAVBAR -->
+  <!-- NAVBAR -->
   <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-md">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <i class="fa-solid fa-boxes-packing text-yellow-400 text-2xl"></i>
-        <h1 class="text-xl font-bold tracking-wide">Mi Bazar Mayorista</h1>
+        <i class="fa-solid fa-store text-yellow-400 text-2xl"></i>
+        <h1 class="text-xl font-bold tracking-tight">Mi Bazar Mayorista</h1>
       </div>
-      <button onclick="toggleCart()" class="relative bg-yellow-400 hover:bg-yellow-500 text-slate-900 px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition">
+      <button onclick="toggleCart()" class="relative bg-yellow-400 hover:bg-yellow-500 text-slate-900 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition shadow">
         <i class="fa-solid fa-cart-shopping"></i>
-        <span>Mi Carrito</span>
+        <span>Carrito</span>
         <span id="cart-count" class="bg-slate-900 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
       </button>
     </div>
   </header>
 
-  <!-- BANNER ENVÍOS -->
   <div class="bg-yellow-100 border-b border-yellow-200 text-yellow-900 px-4 py-2 text-center text-sm font-medium">
-    <i class="fa-solid fa-truck text-yellow-700 mr-1"></i> Precios de venta directo. <strong>Envío a convenir / cotizar post-compra.</strong>
+    <i class="fa-solid fa-truck text-yellow-700 mr-1"></i> Venta Mayorista. <strong>Envíos a todo el país (A convenir).</strong>
   </div>
 
   <main class="max-w-7xl mx-auto px-4 py-6">
 
-    <!-- BARRA DE BÚSQUEDA Y FILTROS -->
-    <div class="flex flex-col md:flex-row gap-4 mb-8">
-      <div class="relative flex-1">
+    <!-- FILTROS Y ORDEN -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div class="relative">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-gray-400"></i>
-        <input type="text" id="search-input" onkeyup="filterProducts()" placeholder="Buscar por producto o SKU..." 
-               class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-slate-900 focus:outline-none shadow-sm">
+        <input type="text" id="search-input" oninput="applyFilters()" placeholder="Buscar por producto o SKU..." 
+               class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-slate-900 focus:outline-none shadow-sm">
       </div>
-      <select id="category-filter" onchange="filterProducts()" 
-              class="py-3 px-4 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-slate-900 focus:outline-none shadow-sm font-medium">
+      <select id="category-filter" onchange="applyFilters()" class="py-3 px-4 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-slate-900 focus:outline-none font-medium shadow-sm">
         <option value="ALL">Todas las categorías</option>
+      </select>
+      <select id="sort-order" onchange="applyFilters()" class="py-3 px-4 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-slate-900 focus:outline-none font-medium shadow-sm">
+        <option value="default">Ordenar por: Destacados</option>
+        <option value="price-asc">Precio: Menor a Mayor</option>
+        <option value="price-desc">Precio: Mayor a Menor</option>
+        <option value="name-asc">Nombre: A - Z</option>
       </select>
     </div>
 
-    <!-- CONTENEDOR DE PRODUCTOS -->
     <div id="loading" class="text-center py-20">
       <i class="fa-solid fa-spinner fa-spin text-4xl text-slate-700 mb-3"></i>
-      <p class="text-gray-600 font-medium">Cargando productos de la base de datos...</p>
+      <p class="text-gray-600 font-medium">Cargando catálogo inteligente...</p>
     </div>
 
     <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 hidden"></div>
 
   </main>
 
-  <!-- MODAL DE DETALLE Y GALERÍA -->
+  <!-- MODAL DE DETALLE Y MULTI-FOTO -->
   <div id="product-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
     <div class="bg-white rounded-xl max-w-2xl w-full overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
       <div class="p-4 border-b flex justify-between items-center bg-gray-50">
         <span id="modal-sku" class="text-xs font-mono bg-slate-200 px-2 py-1 rounded text-slate-700 font-bold">SKU</span>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-700 text-xl font-bold px-2">&times;</button>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold px-2">&times;</button>
       </div>
       <div class="p-6 overflow-y-auto space-y-4">
-        <!-- Galería de imágenes -->
+        <!-- Galería de imágenes múltiples -->
         <div class="space-y-2">
-          <img id="modal-main-img" src="" class="w-full h-64 object-contain rounded-lg bg-gray-50 border">
+          <div class="h-72 bg-gray-50 border rounded-lg flex items-center justify-center relative overflow-hidden">
+            <img id="modal-main-img" src="" class="w-full h-full object-contain p-2">
+          </div>
           <div id="modal-thumbnails" class="flex gap-2 overflow-x-auto py-2"></div>
         </div>
         <h2 id="modal-title" class="text-2xl font-bold text-gray-900"></h2>
-        <p id="modal-price" class="text-2xl font-extrabold text-emerald-600"></p>
+        <div class="flex items-center justify-between">
+          <p id="modal-price" class="text-2xl font-extrabold text-emerald-600"></p>
+          <span id="modal-stock" class="text-xs font-semibold px-2.5 py-1 rounded-full"></span>
+        </div>
         <p id="modal-desc" class="text-gray-600 leading-relaxed text-sm"></p>
       </div>
       <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
         <button onclick="closeModal()" class="px-4 py-2 text-gray-600 font-semibold hover:bg-gray-200 rounded-lg">Cerrar</button>
-        <button id="modal-add-btn" class="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800">Agregar al Carrito</button>
+        <button id="modal-add-btn" class="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800 shadow">Agregar al Carrito</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL DE CARRITO -->
+  <!-- CARRITO LATERAL -->
   <div id="cart-modal" class="fixed inset-0 bg-black/60 z-50 flex justify-end hidden backdrop-blur-sm">
     <div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col">
       <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
-        <h2 class="font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-cart-shopping"></i> Tu Pedido</h2>
-        <button onclick="toggleCart()" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
+        <h2 class="font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-cart-shopping"></i> Tu Carrito</h2>
+        <button onclick="toggleCart()" class="text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
       </div>
       
       <div id="cart-items" class="flex-1 overflow-y-auto p-4 divide-y divide-gray-100"></div>
@@ -111,33 +111,29 @@
           <span class="font-bold text-yellow-700">A convenir</span>
         </div>
         <div class="flex justify-between text-xl font-black text-slate-900">
-          <span>Total Productos:</span>
+          <span>Total:</span>
           <span id="cart-total">$0</span>
         </div>
         
-        <!-- Datos del cliente -->
-        <input type="text" id="client-name" placeholder="Tu Nombre Completo" class="w-full p-2 border rounded-lg text-sm">
-        <input type="text" id="client-address" placeholder="Dirección de envío o Ciudad" class="w-full p-2 border rounded-lg text-sm">
+        <input type="text" id="client-name" placeholder="Tu Nombre o Negocio" class="w-full p-3 border rounded-lg text-sm bg-white">
+        <input type="text" id="client-address" placeholder="Ciudad / Destino de envío" class="w-full p-3 border rounded-lg text-sm bg-white">
 
-        <!-- Botones de Acción -->
         <div class="grid grid-cols-1 gap-2 pt-2">
           <button onclick="checkoutWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 shadow">
-            <i class="fa-brands fa-whatsapp text-lg"></i> Confirmar por WhatsApp
+            <i class="fa-brands fa-whatsapp text-lg"></i> Pedido por WhatsApp
           </button>
-          <button onclick="checkoutMercadoPago()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 shadow">
-            <i class="fa-solid fa-credit-card"></i> Pagar con Mercado Pago
+          <button onclick="checkoutMercadoPagoDirecto()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 shadow">
+            <i class="fa-solid fa-credit-card"></i> Pagar Online (Mercado Pago)
           </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- LÓGICA DE APLICACIÓN -->
   <script>
     let allProducts = [];
     let cart = [];
 
-    // Cargar planilla Google Sheets mediante CSV público
     document.addEventListener("DOMContentLoaded", () => {
       const csvUrl = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/export?format=csv`;
       
@@ -148,16 +144,18 @@
         complete: (results) => {
           allProducts = results.data.map((item, index) => ({
             id: index,
-            sku: item.sku || `SKU-${index}`,
-            nombre: item.nombre || 'Producto sin nombre',
+            sku: item.sku ? item.sku.trim() : `SKU-${index}`,
+            nombre: item.nombre ? item.nombre.trim() : 'Sin nombre',
             precio: parseFloat(item.precio) || 0,
-            categoria: item.categoria || 'General',
+            categoria: item.categoria ? item.categoria.trim() : 'General',
+            stock: parseInt(item.stock) || 0,
             imagenes: item.imagenes ? item.imagenes.split(',').map(s => s.trim()) : ['https://via.placeholder.com/300'],
-            descripcion: item.descripcion || 'Sin descripción disponible.'
+            descripcion: item.descripcion ? item.descripcion.trim() : 'Sin descripción.',
+            masVendido: (item.mas_vendido || '').toLowerCase().trim() === 'si'
           }));
 
           renderCategories();
-          renderProducts(allProducts);
+          applyFilters();
           document.getElementById('loading').classList.add('hidden');
           document.getElementById('products-grid').classList.remove('hidden');
         }
@@ -170,23 +168,45 @@
       select.innerHTML = categories.map(c => `<option value="${c}">${c === 'ALL' ? 'Todas las categorías' : c}</option>`).join('');
     }
 
+    function applyFilters() {
+      const search = document.getElementById('search-input').value.toLowerCase();
+      const category = document.getElementById('category-filter').value;
+      const sort = document.getElementById('sort-order').value;
+
+      let filtered = allProducts.filter(p => {
+        const matchesSearch = p.nombre.toLowerCase().includes(search) || p.sku.toLowerCase().includes(search);
+        const matchesCategory = category === 'ALL' || p.categoria === category;
+        return matchesSearch && matchesCategory;
+      });
+
+      if (sort === 'price-asc') filtered.sort((a, b) => a.precio - b.precio);
+      else if (sort === 'price-desc') filtered.sort((a, b) => b.precio - a.precio);
+      else if (sort === 'name-asc') filtered.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+      renderProducts(filtered);
+    }
+
     function renderProducts(products) {
       const container = document.getElementById('products-grid');
       container.innerHTML = products.map(p => `
-        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition border border-gray-100 flex flex-col justify-between overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition border border-gray-100 flex flex-col justify-between overflow-hidden relative">
+          ${p.masVendido ? `<span class="absolute top-2 right-2 bg-yellow-400 text-slate-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full z-10 shadow">DESTACADO</span>` : ''}
           <div>
-            <div class="h-48 bg-gray-50 relative cursor-pointer" onclick="openModal(${p.id})">
-              <img src="${p.imagenes[0]}" class="w-full h-full object-contain p-4" alt="${p.nombre}">
-              <span class="absolute top-2 left-2 bg-slate-900 text-white text-[10px] font-mono px-2 py-0.5 rounded">${p.sku}</span>
+            <div class="h-52 bg-gray-50 relative cursor-pointer overflow-hidden p-4 flex items-center justify-center" onclick="openModal(${p.id})">
+              <img src="${p.imagenes[0]}" class="w-full h-full object-contain transition hover:scale-105" alt="${p.nombre}">
+              <span class="absolute top-2 left-2 bg-slate-900 text-white text-[10px] font-mono px-2 py-0.5 rounded shadow">${p.sku}</span>
             </div>
             <div class="p-4">
               <span class="text-xs text-slate-500 uppercase tracking-wider font-bold">${p.categoria}</span>
-              <h3 class="font-bold text-gray-800 line-clamp-2 mt-1 cursor-pointer hover:text-slate-900" onclick="openModal(${p.id})">${p.nombre}</h3>
+              <h3 class="font-bold text-gray-800 line-clamp-2 mt-1 cursor-pointer hover:text-slate-900 text-sm" onclick="openModal(${p.id})">${p.nombre}</h3>
             </div>
           </div>
           <div class="p-4 border-t border-gray-50 flex items-center justify-between">
-            <span class="text-xl font-extrabold text-slate-900">$${p.precio.toLocaleString()}</span>
-            <button onclick="addToCart(${p.id})" class="bg-slate-900 hover:bg-slate-800 text-white p-2.5 rounded-lg font-semibold transition">
+            <div>
+              <span class="text-lg font-extrabold text-slate-900">$${p.precio.toLocaleString()}</span>
+              <p class="text-[11px] text-gray-500">Stock: ${p.stock > 0 ? p.stock : '<span class="text-red-500 font-bold">Sin stock</span>'}</p>
+            </div>
+            <button onclick="addToCart(${p.id})" class="bg-slate-900 hover:bg-slate-800 text-white px-3 py-2.5 rounded-lg font-semibold transition text-sm flex items-center gap-1 shadow">
               <i class="fa-solid fa-plus"></i>
             </button>
           </div>
@@ -194,20 +214,6 @@
       `).join('');
     }
 
-    function filterProducts() {
-      const search = document.getElementById('search-input').value.toLowerCase();
-      const category = document.getElementById('category-filter').value;
-
-      const filtered = allProducts.filter(p => {
-        const matchesSearch = p.nombre.toLowerCase().includes(search) || p.sku.toLowerCase().includes(search);
-        const matchesCategory = category === 'ALL' || p.categoria === category;
-        return matchesSearch && matchesCategory;
-      });
-
-      renderProducts(filtered);
-    }
-
-    // Funciones del Modal / Galería
     function openModal(id) {
       const p = allProducts.find(item => item.id === id);
       document.getElementById('modal-sku').innerText = `SKU: ${p.sku}`;
@@ -215,13 +221,22 @@
       document.getElementById('modal-price').innerText = `$${p.precio.toLocaleString()}`;
       document.getElementById('modal-desc').innerText = p.descripcion;
       
+      const stockBadge = document.getElementById('modal-stock');
+      if (p.stock > 0) {
+        stockBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800";
+        stockBadge.innerText = `Stock disponible: ${p.stock}`;
+      } else {
+        stockBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-800";
+        stockBadge.innerText = "Sin stock temporal";
+      }
+
       const mainImg = document.getElementById('modal-main-img');
       mainImg.src = p.imagenes[0];
 
       const thumbsContainer = document.getElementById('modal-thumbnails');
-      thumbsContainer.innerHTML = p.imagenes.map((img, i) => `
+      thumbsContainer.innerHTML = p.imagenes.map((img) => `
         <img src="${img}" onclick="document.getElementById('modal-main-img').src='${img}'" 
-             class="w-14 h-14 object-cover border-2 rounded-lg cursor-pointer hover:border-slate-900 bg-white">
+             class="w-16 h-16 object-cover border-2 rounded-lg cursor-pointer hover:border-slate-900 bg-white shadow-sm flex-shrink-0">
       `).join('');
 
       document.getElementById('modal-add-btn').onclick = () => { addToCart(p.id); closeModal(); };
@@ -232,41 +247,42 @@
       document.getElementById('product-modal').classList.add('hidden');
     }
 
-    // Funciones del Carrito
     function addToCart(id) {
       const product = allProducts.find(p => p.id === id);
+      if (product.stock <= 0) {
+        alert('Este producto no tiene stock disponible actualmente.');
+        return;
+      }
       const existing = cart.find(item => item.id === id);
-
       if (existing) {
+        if (existing.qty >= product.stock) {
+          alert('No podés agregar más unidades que el stock disponible.');
+          return;
+        }
         existing.qty++;
       } else {
         cart.push({ ...product, qty: 1 });
       }
-
       updateCart();
     }
 
     function updateCart() {
-      const cartCount = document.getElementById('cart-count');
-      const cartItems = document.getElementById('cart-items');
-      const cartTotal = document.getElementById('cart-total');
-
       const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
       const totalPrice = cart.reduce((acc, item) => acc + (item.precio * item.qty), 0);
 
-      cartCount.innerText = totalQty;
-      cartTotal.innerText = `$${totalPrice.toLocaleString()}`;
+      document.getElementById('cart-count').innerText = totalQty;
+      document.getElementById('cart-total').innerText = `$${totalPrice.toLocaleString()}`;
 
-      cartItems.innerHTML = cart.map(item => `
+      document.getElementById('cart-items').innerHTML = cart.map(item => `
         <div class="py-3 flex justify-between items-center">
           <div class="flex-1 pr-2">
             <h4 class="font-bold text-sm text-gray-800 line-clamp-1">${item.nombre}</h4>
-            <span class="text-xs font-mono text-gray-500">SKU: ${item.sku} | $${item.precio.toLocaleString()} c/u</span>
+            <span class="text-xs font-mono text-gray-500">[${item.sku}] $${item.precio.toLocaleString()} c/u</span>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="changeQty(${item.id}, -1)" class="w-6 h-6 bg-gray-200 rounded font-bold">-</button>
-            <span class="text-sm font-bold">${item.qty}</span>
-            <button onclick="changeQty(${item.id}, 1)" class="w-6 h-6 bg-gray-200 rounded font-bold">+</button>
+            <button onclick="changeQty(${item.id}, -1)" class="w-7 h-7 bg-gray-200 hover:bg-gray-300 rounded font-bold text-sm">-</button>
+            <span class="text-sm font-bold w-5 text-center">${item.qty}</span>
+            <button onclick="changeQty(${item.id}, 1)" class="w-7 h-7 bg-gray-200 hover:bg-gray-300 rounded font-bold text-sm">+</button>
           </div>
         </div>
       `).join('');
@@ -286,33 +302,32 @@
       document.getElementById('cart-modal').classList.toggle('hidden');
     }
 
-    // Checkout por WhatsApp
     function checkoutWhatsApp() {
       if (cart.length === 0) return alert('El carrito está vacío.');
-      const name = document.getElementById('client-name').value || 'Cliente';
+      const name = document.getElementById('client-name').value || 'Cliente Mayorista';
       const address = document.getElementById('client-address').value || 'A convenir';
 
       let msg = `*NUEVO PEDIDO MAYORISTA*\n`;
       msg += `*Cliente:* ${name}\n`;
-      msg += `*Envío:* ${address} (A convenir)\n\n`;
-      msg += `*DETALLE DEL PEDIDO:*\n`;
+      msg += `*Envío:* ${address}\n\n`;
+      msg += `*DETALLE:*\n`;
 
       cart.forEach(item => {
-        msg += `▪ [${item.sku}] ${item.nombre} x${item.qty} = $${(item.precio * item.qty).toLocaleString()}\n`;
+        msg += `▪ [SKU: ${item.sku}] ${item.nombre} x${item.qty} = $${(item.precio * item.qty).toLocaleString()}\n`;
       });
 
       const total = cart.reduce((acc, item) => acc + (item.precio * item.qty), 0);
-      msg += `\n*TOTAL PRODUCTOS:* $${total.toLocaleString()}\n`;
-      msg += `*(Envío y forma de pago a coordinar)*`;
+      msg += `\n*TOTAL:* $${total.toLocaleString()}\n`;
+      msg += `*(Envío y pago a coordinar)*`;
 
       window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
-    // Checkout por Mercado Pago
-    function checkoutMercadoPago() {
+    function checkoutMercadoPagoDirecto() {
       if (cart.length === 0) return alert('El carrito está vacío.');
-      alert('Para procesar Mercado Pago, coordinaremos el envío y te enviamos el link/QR directo de pago por WhatsApp.');
-      checkoutWhatsApp();
+      const total = cart.reduce((acc, item) => acc + (item.precio * item.qty), 0);
+      alert(`El total de tu pedido es $${total.toLocaleString()}. Te estamos derivando a Mercado Pago para abonar y luego volveremos para coordinar el envío.`);
+      window.open(CONFIG.MERCADO_PAGO_LINK, '_blank');
     }
   </script>
 </body>
