@@ -142,14 +142,14 @@
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
-          allProducts = results.data.map((item, index) => ({
+         allProducts = results.data.map((item, index) => ({
             id: index,
             sku: item.sku ? item.sku.trim() : `SKU-${index}`,
             nombre: item.nombre ? item.nombre.trim() : 'Sin nombre',
             precio: parseFloat(item.precio) || 0,
             categoria: item.categoria ? item.categoria.trim() : 'General',
-            stock: parseInt(item.stock) || 0,
-            imagenes: item.imagenes ? item.imagenes.split(',').map(s => s.trim()) : ['https://via.placeholder.com/300'],
+            stock: parseInt(item.stock) || 0,               // <-- Lee el stock del nuevo lugar
+            imagenes: item.imagenes ? item.imagenes.split(',').map(s => s.trim()) : ['https://via.placeholder.com/300'], // <-- Lee las imágenes corregidas
             descripcion: item.descripcion ? item.descripcion.trim() : 'Sin descripción.',
             masVendido: (item.mas_vendido || '').toLowerCase().trim() === 'si'
           }));
